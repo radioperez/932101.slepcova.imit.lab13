@@ -18,12 +18,6 @@ from PyQt6.QtWidgets import (
 )
 from PyQt6.QtGui import QFont
 import pyqtgraph as QtGraph
-from enum import Enum
-
-class Weather(Enum):
-    SUNNY = 0
-    CLOUDY = 1
-    OVERCAST = 2
 
 class Graph(QtGraph.PlotWidget):
     def __init__(self):
@@ -49,10 +43,10 @@ class MainWindow(QMainWindow):
         # graph
         self.graph = Graph()
         params = QFormLayout()
-        self.mu_line = QLineEdit("0.625")
-        params.addRow("μ: ", self.mu_line)
-        self.sigma_line = QLineEdit("0.123")
-        params.addRow("σ: ", self.sigma_line)
+        self.start1 = QLineEdit("125")
+        params.addRow("Синяя валюта: ", self.start1)
+        self.start2 = QLineEdit("65")
+        params.addRow("Зеленая валюта: ", self.start2)
 
         layout = QVBoxLayout()
         layout.addLayout(panel)
@@ -65,9 +59,22 @@ class MainWindow(QMainWindow):
     def start(self):
         self.graph.clear()
         
-        self.currency1 = [1]
+        self.currency1 = []
+        try:
+            c = float(self.start1.text())
+            self.currency1.append(c)
+        except ValueError:
+            self.currency1.append(100)
+        
         self.w1 = [0]
-        self.currency2 = [1]
+
+        self.currency2 = []
+        try:
+            c = float(self.start2.text())
+            self.currency2.append(c)
+        except ValueError:
+            self.currency1.append(100)
+
         self.w2 = [0]
         self.t = [0]
         
@@ -88,15 +95,9 @@ class MainWindow(QMainWindow):
         
         nrm = default_rng().normal
 
-        try:
-            mu = float(self.mu_line.text()) # drift
-        except ValueError:
-            mu = 0.625
-        try:
-            sigma = float(self.sigma_line.text()) # volatility -- st deviation
-        except ValueError:
-            sigma = 0.123
-
+        mu = 0.625
+        sigma = 0.123
+        
         self.w1.append(self.w1[-1] + nrm()*np.sqrt(delta))
         coin1 = self.currency1[-1] * np.exp((mu - sigma**2 / 2)*(delta)+ sigma * self.w1[-1])
         self.currency1.append(coin1)
@@ -109,9 +110,9 @@ class MainWindow(QMainWindow):
         self.line2.setData(self.t, self.currency2)
     def stats(self):
         self.timer.stop()
-        text1 = QtGraph.TextItem(f'{self.currency1[-1]}', color=(0, 0, 0))
+        text1 = QtGraph.TextItem(f'{self.currency1[-1]:.2f}', color=(10, 10, 144), anchor=(1,1))
         text1.setPos(self.t[-1], self.currency1[-1])
-        text2 = QtGraph.TextItem(f'{self.currency2[-1]}', color=(0, 0, 0))
+        text2 = QtGraph.TextItem(f'{self.currency2[-1]:.2f}', color=(10, 144, 10), anchor=(1,1))
         text2.setPos(self.t[-1], self.currency2[-1])
         self.graph.addItem(text1)
         self.graph.addItem(text2)
